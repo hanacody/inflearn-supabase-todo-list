@@ -50,7 +50,7 @@ export async function updateTodo(todo: TodoRowUpdate) {
     .from("todo")
     .update({
       ...todo,
-      updated_at: new Date().toISOString(),
+      updated: new Date().toISOString(),
     })
     .eq("id", todo.id);
 
