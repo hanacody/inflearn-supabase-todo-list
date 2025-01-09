@@ -30,7 +30,26 @@ export default function RootLayout({
 
         <body className={inter.className}>
           <ReactQueryClientProvider>
-              {children}
+            <div className="flex justify-center gap-4 py-4 border-b">
+              {/* 상단 네비게이션 탭 */}
+              <a href="/" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 border-b-2 border-transparent hover:border-gray-300">
+                <i className="fas fa-list-ul mr-2"></i>
+                TODO
+              </a>
+              <a href="/dropbox" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 border-b-2 border-transparent hover:border-gray-300">
+                <i className="fab fa-dropbox mr-2"></i>
+                Dropbox
+              </a>
+              <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 border-b-2 border-transparent hover:border-gray-300">
+                <i className="fab fa-netflix mr-2"></i>
+                Netflix
+              </button>
+              <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 border-b-2 border-transparent hover:border-gray-300">
+                <i className="fab fa-instagram mr-2"></i>
+                Instagram
+              </button>
+            </div>
+            {children}
           </ReactQueryClientProvider>
         </body>
       </html>

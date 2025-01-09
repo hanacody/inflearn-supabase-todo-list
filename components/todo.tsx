@@ -11,13 +11,20 @@ export default function Todo({ todo }) {
   const [completed, setCompleted] = useState(todo.completed);
   const [title, setTitle] = useState(todo.title);
 
+  // TODO 항목을 업데이트하기 위한 mutation 설정
+  // - mutationFn: 실제 업데이트 작업을 수행하는 함수
+  // - onSuccess: 업데이트 성공 시 실행되는 콜백
   const updateTodoMutation = useMutation({
+    // updateTodo API를 호출하여 todo 항목 업데이트
     mutationFn: () =>
       updateTodo({
         id: todo.id,
         title,
         completed,
       }),
+    // 업데이트 성공 시:
+    // 1. 편집 모드 종료
+    // 2. todos 쿼리 무효화하여 목록 새로고침
     onSuccess: () => {
       setIsEditing(false);
       queryClient.invalidateQueries({
