@@ -1,81 +1,47 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export const applyMiddlewareSupabaseClient = async (request: NextRequest) => {
-  // Create an unmodified response
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+/**
+ * 미들웨어 - 인증 및 라우팅 제어
+ * 
+ * - 보호된 경로에 대한 인증 검사
+ * - 인증 페이지 접근 제어
+ * - 이메일 확인 페이지 처리
+ */
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          // If the cookie is updated, update the cookies for the request and response
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          // If the cookie is removed, update the cookies for the request and response
-          request.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-        },
-      },
-    }
-  );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  // refreshing the auth token
-  await supabase.auth.getUser();
+  // 인증이 필요한 페이지 목록
+  const protectedPaths = ['/instagram/feed', '/instagram/chat', '/instagram/discover'];
+  const isProtectedPath = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path));
 
-  return response;
-};
+  // 인증 관련 페이지
+  const isAuthPage = req.nextUrl.pathname.startsWith('/instagram/signin') || 
+                    req.nextUrl.pathname.startsWith('/instagram/signup');
+  const isConfirmPage = req.nextUrl.pathname.startsWith('/instagram/signup/confirm');
 
-export async function middleware(request) {
-  return await applyMiddlewareSupabaseClient(request);
+  // 이메일 확인 페이지는 인증 검사에서 제외
+  if (isConfirmPage) {
+    return res;
+  }
+
+  if (isProtectedPath && !session) {
+    return NextResponse.redirect(new URL('/instagram/signin', req.url));
+  }
+
+  if (isAuthPage && session) {
+    return NextResponse.redirect(new URL('/instagram', req.url));
+  }
+
+  return res;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ['/instagram/:path*']
 };
