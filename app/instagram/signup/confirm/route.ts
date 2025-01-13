@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
     try {
+      // 로딩 페이지로 먼저 이동
+      return NextResponse.redirect(new URL('/instagram/signup/confirm/loading', request.url));
+      
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       
       if (error) {
